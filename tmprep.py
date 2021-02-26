@@ -795,10 +795,27 @@ with open(outputfile, 'w', newline='\n') as out:
             short_positions.append(str(first))
         else:
             short_positions.append("{}-{}".format(first, last))
-        positions = [str(i) for i in positions]
-
-
-        out.write('{} {} \ \n'.format(element, ','.join(short_positions)))
+        # break long lines
+        newpos = []
+        tmp = []
+        lenpos = 0
+        for item in short_positions:
+            lenitem = len(item)+1
+            if (lenpos + lenitem) > 70:
+                newpos.append(','.join(tmp))
+                lenpos = lenitem
+                tmp = [item,]
+            else:
+                tmp.append(item)
+                lenpos+=lenitem
+        if tmp:
+            newpos.append(','.join(tmp))
+        for count, item in enumerate(newpos,0):
+            if count == 0:
+                out.write('{} {} \ \n'.format(element, item))
+            else:
+                out.write('{} {} \ \n'.format(" ", item))
+        #out.write('{} {} \ \n'.format(element, ','.join(short_positions)))
         out.write('  basis ={} {} \ \n'.format(element, args.basis))
         if element in all_ecp:
             if element in ecp28:
