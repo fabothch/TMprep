@@ -26,12 +26,17 @@ Usage exmple:
 tmprep.py -func r2scan-3c -scfconv 7 -radsize 10 -cosmo 80.0 -sym c1
 
 """
+
+# To do:
+# clear error codes!
+
+
 import os
 import sys
 import argparse
 from collections import Counter
 
-version = "0.1.0"
+version = "0.1.1"
 
 def read_chrg(default=0):
     # READ .CHRG .UHF
@@ -249,6 +254,8 @@ tmprep.py -func r2scan-3c -scfconv 7 -radsize 10 -cosmo 80.0 -sym c1
         help=("Create auxbasis file."),
     )
     args = parser.parse_args(argv)
+    if args.functional:
+        args.functional = getattr(args, "functional").lower()
     if args.basis:
         setattr(args, 'modbasis', True)
     if args.grid:
@@ -409,16 +416,25 @@ element_electrons={'h':1, 'he':2, 'li':3, 'be':4, 'b':5, 'c':6,
                    'in':49, 'sn':50, 'sb':51, 'te':52, 'i':53, 'xe':54, 
                    'cs':55, 'ba':56, 'la':57, 'ce':58, 'pr':59, 'nd':60,
                    'pm':61, 'sm':62, 'eu':63, 'gd':64, 'tb':65, 'dy':66,
-                   'ho':67, 'er':68, 'tm':69, 'yp':70, 'lu':71, 'hf':72,
+                   'ho':67, 'er':68, 'tm':69, 'yb':70, 'lu':71, 'hf':72,
                    'ta':73, 'w':74,  're':75, 'os':76, 'ir':77, 'pt':78,
                    'au':79, 'hg':80, 'tl': 81, 'pb': 82, 'bi':83, 'po':84,
                    'at':85, 'rn': 86, 'fr':87, 'ra':88, 'ac':89, 'th':90,
                    'pa':91, 'u':92, 'np':93, 'pu':94, 'am':95, 'cm':96, 
                    'bk': 97, 'cf':98, 'es':99, 'fm':100, 'md':101, 'no':102,
                    'lr': 103}
+if not all(element in element_electrons.keys() for element in element_occurence.keys()):
+    print("There are some elements that are unknown:")
+    for element in element_occurence.keys():
+        if element not in element_electrons.keys():
+            print("NOT KNOWN: {}".format(element))
+            error_logical = True
+    if error_logical:
+        sys.exit(1)
+
 ecp28=['rb', 'sr', 'y', 'zr', 'nb', 'mo', 'tc', 'ru', 'rh', 'pd', 'ag', 'cd',
        'in', 'sn', 'sb', 'te', 'i', 'xe', 'ce', 'pr', 'nd', 'pm', 'sm', 'eu',
-       'gd', 'tb', 'dy', 'ho', 'er', 'tm', 'yp', 'lu'
+       'gd', 'tb', 'dy', 'ho', 'er', 'tm', 'yb', 'lu'
       ] 
 ecp46=['cs', 'ba', 'la']
 ecp60=['hf', 'ta', 'w', 're', 'os', 'ir', 'pt', 'au', 'hg', 'tl', 'pb', 'bi',
@@ -564,7 +580,7 @@ if args.gen_bas:
         else:
             print(f"ERROR: the basis set file can not be found!")
 
-        with open(basis_file, 'r') as inp:
+        with open(basis_file, 'r', encoding="ISO-8859-1") as inp: 
             data = inp.readlines()
 
         found = False
@@ -592,9 +608,11 @@ if args.gen_bas:
         for basis in find_basis:
             for line in data:
                 if basis in line and not '#' in line and not '->' in line:
-                    found = True
+                    if basis == line.strip():
+                        found = True
+                        continue
                 if found:
-                    if '*' in line and not start and element not in line:
+                    if '*' in line and not start and element not in line and not '#' in line:
                         start=True
                         continue
                     elif '*' in line and start:
@@ -678,7 +696,7 @@ if args.gen_auxbas:
         else:
             print(f"ERROR: the jbasis set file can not be found!")
 
-        with open(jbasis_file, 'r') as inp:
+        with open(jbasis_file, 'r', encoding="ISO-8859-1") as inp:
             data = inp.readlines()
 
         found = False
@@ -718,6 +736,9 @@ if args.gen_auxbas:
         for element in element_occurence.keys():
             out.write("*\n")
             #out.write(f"{element} {basis_set}\n")
+            if not jbasis_element_data[element]:
+                print("ERROR: jbas not found for element: {}".format(element))
+                continue
             out.write(jbasis_element_data[element][0]+'\n')
             out.write(f"# {comment}\n")
             out.write("*\n")
@@ -791,7 +812,8 @@ with open(outputfile, 'w', newline='\n') as out:
             out.write('  jbas  ={} {}\n'.format(element, 'universal'))
     if args.gen_bas:
         out.write('$basis    file=basis \n')
-        out.write('$ecp      file=basis \n')
+        if any(element in all_ecp for element in element_occurence.keys()):
+            out.write('$ecp      file=basis \n')
     if args.gen_auxbas:
         out.write('$jbas    file=auxbasis \n')
     out.write("$scforbitalshift automatic=0.1 \n")
