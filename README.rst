@@ -1,3 +1,11 @@
+|GitHub release| |made-with-python|
+
+.. |GitHub release| image:: https://img.shields.io/github/v/release/fabothch/TMprep
+   :target: https://github.com/fabothch/TMprep/releases/latest
+
+.. |made-with-python| image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
+   :target: https://www.python.org/
+
 ==============
 TMprep Project
 ==============

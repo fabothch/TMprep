@@ -36,7 +36,7 @@ import sys
 import argparse
 from collections import Counter
 
-version = "0.1.1"
+version = "0.1.2"
 
 def read_chrg(default=0):
     # READ .CHRG .UHF
@@ -65,7 +65,7 @@ def read_uhf(default=0):
         unpaired = default
     return unpaired
 
-def cml(internal_defaults, argv=None):
+def cml(internal_defaults, solvent_dcosmors, argv=None):
     """
     Process commandline arguments
     """
@@ -228,6 +228,17 @@ tmprep.py -func r2scan-3c -scfconv 7 -radsize 10 -cosmo 80.0 -sym c1
         help=("Dielectric constant for COSMO"),
     )
     group1.add_argument(
+        "-dcosmors",
+        "--dcosmors",
+        dest="dcosmors",
+        action="store",
+        required=False,
+        choices=list(solvent_dcosmors.keys()),
+        metavar="",
+        help=("Add DCOSMO-RS to control. Usage: -dcosmors [solvent]. "
+            "Options are {}. It is not necessary to additionally use -cosmo".format(', '.join(list(solvent_dcosmors.keys())))),
+    )
+    group1.add_argument(
         "-noopt",
         "--noopt",
         dest="noopt",
@@ -292,7 +303,25 @@ tmprep.py -func r2scan-3c -scfconv 7 -radsize 10 -cosmo 80.0 -sym c1
         args.disp = ""
     if args.radsize is not None:
         args.modradsize = True
+    if args.dcosmors and not args.cosmo:
+        setattr(args, 'cosmo', solvent_dcosmors.get(args.dcosmors)[0])
     return args
+
+solvent_dcosmors = {
+    "acetone": [20.7, "$dcosmo_rs file=propanone_25.pot"],
+    "chcl3": [4.8, "$dcosmo_rs file=chcl3_25.pot"],
+    "acetonitrile": [36.6, "$dcosmo_rs file=acetonitrile_25.pot"],
+    "ch2cl2": [9.1, "$dcosmo_rs file=chcl3_25.pot"],
+    "dmso": [47.2, "$dcosmo_rs file=dimethylsulfoxide_25.pot"],
+    "h2o": [80.1, "$dcosmo_rs file=h2o_25.pot"],
+    "methanol": [32.7, "$dcosmo_rs file=methanol_25.pot"],
+    "thf": [7.6, "$dcosmo_rs file=thf_25.pot"],
+    "toluene": [2.4, "$dcosmo_rs file=toluene_25.pot"],
+    "octanol": [9.86, "$dcosmo_rs file=octanol_25.pot"],
+    "woctanol": [8.1, "$dcosmo_rs file=wet-octanol_25.pot"],
+    "hexadecane": [2.08, "$dcosmo_rs file=hexadecane_25.pot"],
+}
+
 
 internal_defaults = {
     "symmetry": None, # not c1
@@ -401,7 +430,7 @@ for file in ('mos', 'alpha', 'beta', 'basis', 'auxbasis', 'control'):
     if os.path.isfile(file_path):
         os.remove(file_path)
 
-args = cml(internal_defaults)
+args = cml(internal_defaults, solvent_dcosmors)
 
 nat = len(elements)
 element_occurence = Counter(elements)
@@ -878,6 +907,8 @@ with open(outputfile, 'w', newline='\n') as out:
         out.write("$cosmo \n")
         out.write("  epsilon= {:.2f} \n".format(float(args.cosmo)))
     # DCOSMO-RS:
+    if args.dcosmors:
+        out.write("{}\n".format(solvent_dcosmors.get(args.dcosmors)[1]))
     ### terminate control file
     out.write("$end\n")
 
