@@ -36,7 +36,7 @@ import sys
 import argparse
 from collections import Counter
 
-version = "0.1.2"
+version = "0.1.3"
 
 def read_chrg(default=0):
     # READ .CHRG .UHF
@@ -84,6 +84,7 @@ tmprep.py -func r2scan-3c -scfconv 7 -radsize 10 -cosmo 80.0 -sym c1
 
 """
     )
+    group0 = parser.add_mutually_exclusive_group(required=True)
     group1 = parser.add_argument_group("Options")
     group1.add_argument(
         "-chrg",
@@ -105,7 +106,7 @@ tmprep.py -func r2scan-3c -scfconv 7 -radsize 10 -cosmo 80.0 -sym c1
         metavar="",
         help="Integer number of unpaired electrons of the molecule.",
     )
-    group1.add_argument(
+    group0.add_argument(
         "-func",
         "--func",
         dest="functional",
@@ -113,6 +114,23 @@ tmprep.py -func r2scan-3c -scfconv 7 -radsize 10 -cosmo 80.0 -sym c1
         required=False,
         metavar="",
         help="Density functional aproximation.",
+    )
+    group0.add_argument(
+        "-wfunc",
+        "--wfunc",
+        dest="wave_func",
+        action="store",
+        required=False,
+        metavar="",
+        help="Wavefunction based method. E.g. HF.",
+    )
+    group0.add_argument(
+        "-hf",
+        "--hf",
+        dest="hf",
+        action="store_true",
+        required=False,
+        help="Selecting Hartree Fock (HF).",
     )
     group1.add_argument(
         "-basis",
@@ -265,6 +283,14 @@ tmprep.py -func r2scan-3c -scfconv 7 -radsize 10 -cosmo 80.0 -sym c1
         help=("Create auxbasis file."),
     )
     args = parser.parse_args(argv)
+    if args.hf:
+        args.wave_func ="hf"
+        try:
+            delattr(args, "hf")
+        except Exception as e:
+            print(e)
+    if args.wave_func:
+        args.wave_func = getattr(args, "wave_func").lower()
     if args.functional:
         args.functional = getattr(args, "functional").lower()
     if args.basis:
@@ -587,8 +613,12 @@ if args.functional in ('kt2', 'kt1'):
 if args.novdw:
     args.disp = ""
 
+if args.functional and not args.wave_func:
+    tmp_method = args.functional
+else:
+    tmp_method = args.wave_func
 print("Settings: {}/{} scfconv {} grid {}".format(
-      args.functional, args.basis, args.scfconv, args.grid)
+      tmp_method, args.basis, args.scfconv, args.grid)
       )
 
 #------- write basis file-------------------------------------------------------
@@ -863,7 +893,7 @@ with open(outputfile, 'w', newline='\n') as out:
     if args.gen_auxbas:
         out.write('$jbas    file=auxbasis \n')
     out.write("$scforbitalshift automatic=0.1 \n")
-    if args.functional:
+    if args.functional and not args.wave_func:
         out.write("$dft\n")
         if args.xcfun: # currently only kt1 kt2
             # can be improved for sure, currently just as a demonstration
