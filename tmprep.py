@@ -36,7 +36,7 @@ import sys
 import argparse
 from collections import Counter
 
-version = "0.1.3"
+version = "0.1.4"
 
 def read_chrg(default=0):
     # READ .CHRG .UHF
@@ -64,6 +64,19 @@ def read_uhf(default=0):
     else:
         unpaired = default
     return unpaired
+
+def read_sym(default=None):
+    sym_path = os.path.join(os.getcwd(), '.SYM')
+    if os.path.isfile(sym_path):
+        with open(sym_path, 'r') as inp:
+            try:
+                symmetry = str(inp.readline().strip().split()[0])
+            except (FileNotFoundError, ValueError):
+                print("Can't read .SYM file! Going to exit!")
+                sys.exit(1)
+    else:
+        symmetry = default
+    return symmetry
 
 def cml(internal_defaults, solvent_dcosmors, argv=None):
     """
@@ -301,6 +314,8 @@ tmprep.py -func r2scan-3c -scfconv 7 -radsize 10 -cosmo 80.0 -sym c1
         setattr(args,'charge', read_chrg())
     if not args.unpaired:
         setattr(args,'unpaired', read_uhf())
+    if not args.symmetry:
+        setattr(args, 'symmetry', read_sym())
     if (args.d4 or
         args.d3zero or
         args.d3 or
@@ -524,6 +539,8 @@ if args.charge != 0:
     print('charge: {}'.format(args.charge))
 if args.unpaired != 0:
     print('unpaired number of electrons: {}'.format(args.unpaired))
+if args.symmetry is not None:
+    print("symmetry: {}".format(args.symmetry))
 print("number of all electrons: {}".format(nall_electrons))
 print("number of considered electrons: {}".format(necp_electrons))
 if nat == 1:
