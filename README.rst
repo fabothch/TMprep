@@ -52,6 +52,67 @@ to errors so use with caution.
 
 Otherwise ridft will generate the basis and auxbasis files.
 
+Current options:
+================
+
+.. code:: bash
+
+   tmprep.py - Command line input for TURBOMOLE V 0.1.4 FB 2021
+   usage: tmprep.py [-h] [-chrg] [-uhf] (-func  | -wfunc  | -hf) [-basis] [-sym]
+                    [-radsize] [-scfconv] [-grid] [-d3zero] [-d3] [-d3atm] [-d4]
+                    [-donl] [-novdw] [-nori] [-cosmo] [-dcosmors] [-noopt]
+                    [-gen_bas] [-gen_auxbas]
+
+   optional arguments:
+     -h, --help            show this help message and exit
+     -func , --func        Density functional aproximation.
+     -wfunc , --wfunc      Wavefunction based method. E.g. HF.
+     -hf, --hf             Selecting Hartree Fock (HF).
+
+   Options:
+     -chrg , --chrg        Charge of the molecule.
+     -uhf , --uhf          Integer number of unpaired electrons of the molecule.
+     -basis , --basis      Basis set
+     -sym , --sym          Symmetry in Schönflies lower case
+     -radsize , --radsize 
+                           Radsize
+     -scfconv , --scfconv 
+                           scfconv
+     -grid , --grid        DFA grid
+     -d3zero, --d3zero     D3(0)
+     -d3, --d3             D3(BJ)
+     -d3atm, --d3atm       D3(BJ)ATM
+     -d4, --d4             D4
+     -donl, --donl         NL dispersion correction, needs sym c1
+     -novdw, --novdw       No dispersion correction
+     -nori, --nori         No resolution of the identity
+     -cosmo , --cosmo      Dielectric constant for COSMO
+     -dcosmors , --dcosmors 
+                           Add DCOSMO-RS to control. Usage: -dcosmors [solvent].
+                           Options are acetone, chcl3, acetonitrile, ch2cl2,
+                           dmso, h2o, methanol, thf, toluene, octanol, woctanol,
+                           hexadecane. It is not necessary to additionally use
+                           -cosmo
+     -noopt, --noopt       Use cartesian coordinates.
+     -gen_bas, --gen_bas   Create basis file.
+     -gen_auxbas, --gen_auxbas
+                           Create auxbasis file.
+
+   tmprep is designed to create a usable control file for TURBOMOLE > version 7.5.
+   Useful settings are predefined. .CHRG and .UHF files containing integer numbers
+   for charge and unpaired number of electrons are read. Settings as defined in the 
+   ~/.cefinerc are read and are compatible to tmprep. The number of electrons which 
+   are printed out are only calculated within tmprep and do not stem from an EHT guess.
+
+   Usage exmple:
+
+   tmprep.py -func r2scan-3c -scfconv 7 -radsize 10 -cosmo 80.0 -sym c1
+
+
+
+
+
+
 
 License
 =======
