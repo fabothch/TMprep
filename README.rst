@@ -15,8 +15,9 @@ Introduction
 
 ``tmprep`` is designed to create a usable control file for TURBOMOLE > version 7.5.
 Useful settings are predefined. The files .CHRG and .UHF containing integer numbers
-for charge and unpaired number of electrons are read. Settings as defined in the 
-~/.cefinerc are read and are compatible to ``tmprep``. The number of electrons which 
+for charge and unpaired number of electrons are read. Symmetry information in Schoenflies 
+notationcan be read from the .SYM file. Settings as defined in the ~/.cefinerc are read 
+and are compatible to ``tmprep``. The number of electrons which 
 are printed out are only calculated within ``tmprep`` and do not stem from an EHT guess.
 
 **WARNING**
