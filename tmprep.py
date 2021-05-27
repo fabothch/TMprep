@@ -39,7 +39,7 @@ from collections import Counter
 version = "0.1.4"
 
 def read_chrg(default=0):
-    # READ .CHRG .UHF
+    # READ .CHRG
     chrg_path = os.path.join(os.getcwd(), '.CHRG')
     if os.path.isfile(chrg_path):
         with open(chrg_path, 'r') as inp:
@@ -53,6 +53,7 @@ def read_chrg(default=0):
     return charge
 
 def read_uhf(default=0):
+    # READ .UHF
     uhf_path = os.path.join(os.getcwd(), '.UHF')
     if os.path.isfile(uhf_path):
         with open(uhf_path, 'r') as inp:
@@ -66,6 +67,7 @@ def read_uhf(default=0):
     return unpaired
 
 def read_sym(default=None):
+    # READ .SYM
     sym_path = os.path.join(os.getcwd(), '.SYM')
     if os.path.isfile(sym_path):
         with open(sym_path, 'r') as inp:
