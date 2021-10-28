@@ -17,8 +17,8 @@
 
 """tmprep is designed to create a usable control file for TURBOMOLE > version 7.5 .
 Useful settings are predefined. .CHRG and .UHF files containing integer numbers
-for charge and unpaired number of electrons are read. Settings as defined in the 
-~/.cefinerc are read and are compatible to tmprep. The number of electrons which 
+for charge and unpaired number of electrons are read. Settings as defined in the
+~/.cefinerc are read and are compatible to tmprep. The number of electrons which
 are printed out are only calculated within tmprep and do not stem from an EHT guess.
 
 Usage exmple:
@@ -36,10 +36,10 @@ import sys
 import argparse
 from collections import Counter
 
-version = "0.1.4"
+version = "0.1.5"
 
 def read_chrg(default=0):
-    # READ .CHRG
+    "read molecular charge from file: .CHRG"
     chrg_path = os.path.join(os.getcwd(), '.CHRG')
     if os.path.isfile(chrg_path):
         with open(chrg_path, 'r') as inp:
@@ -53,7 +53,7 @@ def read_chrg(default=0):
     return charge
 
 def read_uhf(default=0):
-    # READ .UHF
+    "read number of unpaired electrons from file: .UHF"
     uhf_path = os.path.join(os.getcwd(), '.UHF')
     if os.path.isfile(uhf_path):
         with open(uhf_path, 'r') as inp:
@@ -67,7 +67,7 @@ def read_uhf(default=0):
     return unpaired
 
 def read_sym(default=None):
-    # READ .SYM
+    "read molecular symmetry in schoenfliess notation from file: .SYM"
     sym_path = os.path.join(os.getcwd(), '.SYM')
     if os.path.isfile(sym_path):
         with open(sym_path, 'r') as inp:
@@ -79,6 +79,10 @@ def read_sym(default=None):
     else:
         symmetry = default
     return symmetry
+
+def unique(sequence):
+    seen = set()
+    return [x for x in sequence if not (x in seen or seen.add(x))]
 
 def cml(internal_defaults, solvent_dcosmors, argv=None):
     """
@@ -297,6 +301,15 @@ tmprep.py -func r2scan-3c -scfconv 7 -radsize 10 -cosmo 80.0 -sym c1
         required=False,
         help=("Create auxbasis file."),
     )
+    group1.add_argument(
+        "-noauxg",
+        "--noauxg",
+        dest="noauxg",
+        action="store_true",
+        default=False,
+        required=False,
+        help=("Remove g-functions from auxiliary basis set."),
+    )
     args = parser.parse_args(argv)
     if args.hf:
         args.wave_func ="hf"
@@ -368,7 +381,7 @@ solvent_dcosmors = {
 
 internal_defaults = {
     "symmetry": None, # not c1
-    "basis": "def2-mSVP", 
+    "basis": "def2-mSVP",
     'functional': 'pbeh-3c',
     'grid': 'm4',
     'ri': True,
@@ -393,7 +406,7 @@ internal_defaults = {
     'thime': 4,
     'thize': 0.0000001,
     'extol': None,
-    'noauxg' : True,
+    'noauxg' : False,
 }
 
 path_cefinerc =os.path.expanduser('~/.cefinerc')
@@ -477,22 +490,22 @@ args = cml(internal_defaults, solvent_dcosmors)
 
 nat = len(elements)
 element_occurence = Counter(elements)
-element_electrons={'h':1, 'he':2, 'li':3, 'be':4, 'b':5, 'c':6, 
+element_electrons={'h':1, 'he':2, 'li':3, 'be':4, 'b':5, 'c':6,
                    'n':7, 'o':8, 'f':9, 'ne':10, 'na':11, 'mg':12,
                    'al':13, 'si':14, 'p':15, 's':16, 'cl':17, 'ar':18,
                    'k':19, 'ca':20, 'sc':21, 'ti':22, 'v':23, 'cr':24,
                    'mn':25, 'fe':26, 'co':27, 'ni':28, 'cu':29, 'zn':30,
                    'ga':31, 'ge':32, 'as':33, 'se':34, 'br':35, 'kr':36,
                    'rb':37, 'sr':38, 'y':39, 'zr':40, 'nb':41, 'mo':42,
-                   'tc':43, 'ru':44, 'rh':45, 'pd':46, 'ag':47, 'cd':48, 
-                   'in':49, 'sn':50, 'sb':51, 'te':52, 'i':53, 'xe':54, 
+                   'tc':43, 'ru':44, 'rh':45, 'pd':46, 'ag':47, 'cd':48,
+                   'in':49, 'sn':50, 'sb':51, 'te':52, 'i':53, 'xe':54,
                    'cs':55, 'ba':56, 'la':57, 'ce':58, 'pr':59, 'nd':60,
                    'pm':61, 'sm':62, 'eu':63, 'gd':64, 'tb':65, 'dy':66,
                    'ho':67, 'er':68, 'tm':69, 'yb':70, 'lu':71, 'hf':72,
                    'ta':73, 'w':74,  're':75, 'os':76, 'ir':77, 'pt':78,
                    'au':79, 'hg':80, 'tl': 81, 'pb': 82, 'bi':83, 'po':84,
                    'at':85, 'rn': 86, 'fr':87, 'ra':88, 'ac':89, 'th':90,
-                   'pa':91, 'u':92, 'np':93, 'pu':94, 'am':95, 'cm':96, 
+                   'pa':91, 'u':92, 'np':93, 'pu':94, 'am':95, 'cm':96,
                    'bk': 97, 'cf':98, 'es':99, 'fm':100, 'md':101, 'no':102,
                    'lr': 103}
 if not all(element in element_electrons.keys() for element in element_occurence.keys()):
@@ -507,7 +520,7 @@ if not all(element in element_electrons.keys() for element in element_occurence.
 ecp28=['rb', 'sr', 'y', 'zr', 'nb', 'mo', 'tc', 'ru', 'rh', 'pd', 'ag', 'cd',
        'in', 'sn', 'sb', 'te', 'i', 'xe', 'ce', 'pr', 'nd', 'pm', 'sm', 'eu',
        'gd', 'tb', 'dy', 'ho', 'er', 'tm', 'yb', 'lu'
-      ] 
+      ]
 ecp46=['cs', 'ba', 'la']
 ecp60=['hf', 'ta', 'w', 're', 'os', 'ir', 'pt', 'au', 'hg', 'tl', 'pb', 'bi',
        'po', 'at', 'rn'
@@ -628,7 +641,7 @@ elif args.functional in ('pbe0-3c', 'pbe03c'):
 # KT1 KT2
 if args.functional in ('kt2', 'kt1'):
     setattr(args, 'xcfun', True)
-    
+  
 if args.novdw:
     args.disp = ""
 
@@ -658,12 +671,14 @@ if args.gen_bas:
         else:
             print(f"ERROR: the basis set file can not be found!")
 
-        with open(basis_file, 'r', encoding="ISO-8859-1") as inp: 
+        with open(basis_file, 'r', encoding="ISO-8859-1") as inp:
             data = inp.readlines()
 
         found = False
         start = False
         find_basis = []
+        basis_set = args.basis
+        # read first iteration
         for line in data: 
             if basis_set in line and not '#' in line and not '->' in line:
                 found = True
@@ -679,7 +694,31 @@ if args.gen_bas:
                     find_basis.append(line.strip().strip('-> '))
         if not find_basis:
             find_basis.append(initial)
+        found = False
+        start = False
 
+        # read second iteration (and insert at appropriate position)
+        count = 0
+        for basis_set in find_basis:
+            for line in data: 
+                if basis_set in line and not '#' in line and not '->' in line:
+                    found = True
+                if found:
+                    if element in line.split()[0] and not '->' in line and basis_set in line:
+                        initial = line.strip()
+                    if '*' in line and not start and element not in line:
+                        start=True
+                        continue
+                    elif '*' in line and start:
+                        break
+                    if start and '->' in line:
+                        count+=1
+                        find_basis.insert(count,line.strip().strip('-> '))
+            found = False
+            start = False
+        basis_set = args.basis
+
+        # read basis data for found basis sets
         found = False
         start = False
         basis_data = []
@@ -697,7 +736,7 @@ if args.gen_bas:
                         found = False
                         start = False
                         break
-                    if start and '#' not in line:
+                    if start and '#' not in line and '->' not in line:
                         basis_data.append(line.strip())
         basis_element_data[element] = basis_data
         
@@ -732,8 +771,9 @@ if args.gen_bas:
                 tmp = line.split()
                 if len(tmp) == 2:
                     try:
-                        float(tmp[1])
-                        out.write(f"  {tmp[0]}    {tmp[1]}\n")
+                        a = f"{float(tmp[0]):.12}"
+                        b = f"{float(tmp[1]):.12}"
+                        out.write(f"  {a:<12}     {b:<12}\n")
                     except (ValueError,Exception) as e:
                         out.write(f"   {tmp[0]}  {tmp[1]}\n")
                 else:
@@ -748,7 +788,7 @@ if args.gen_bas:
             for line in ecp_element_data[element]:
                 if 'ncore' in line:
                     out.write(line+'\n')
-                    out.write(f"#        coefficient   r^n          exponent\n")
+                    out.write("#        coefficient   r^n          exponent\n")
                     continue
                 if len(line.split()) >= 3:
                     out.write(f"    {line}\n")
@@ -772,7 +812,7 @@ if args.gen_auxbas:
             jbasis_file = os.path.join(os.path.expandvars("$TURBODIR"), "jbasen", element)
             print(f"Using jbasis ({element}) from {os.path.join(os.path.expandvars('$TURBODIR'), 'jbasen', element)}")
         else:
-            print(f"ERROR: the jbasis set file can not be found!")
+            print("ERROR: the jbasis set file can not be found!")
 
         with open(jbasis_file, 'r', encoding="ISO-8859-1") as inp:
             data = inp.readlines()
@@ -808,12 +848,11 @@ if args.gen_auxbas:
                         jbasis_data.append(line.strip())
         jbasis_element_data[element] = jbasis_data
 
-    # write basis file:
+    # write auxbasis file:
     with open('auxbasis', 'w') as out:
         out.write("$jbas\n")
         for element in element_occurence.keys():
             out.write("*\n")
-            #out.write(f"{element} {basis_set}\n")
             if not jbasis_element_data[element]:
                 print("ERROR: jbas not found for element: {}".format(element))
                 continue
@@ -824,8 +863,9 @@ if args.gen_auxbas:
                 tmp = line.split()
                 if len(tmp) == 2:
                     try:
-                        float(tmp[1])
-                        out.write(f"  {tmp[0]}    {tmp[1]}\n")
+                        a = f"{float(tmp[0]):.12}"
+                        b = f"{float(tmp[1]):.12}"
+                        out.write(f"  {a:<12}    {b:<12}\n")
                     except (ValueError,Exception) as e:
                         out.write(f"   {tmp[0]}  {tmp[1]}\n")
                 else:
@@ -861,9 +901,9 @@ with open(outputfile, 'w', newline='\n') as out:
         short_positions = []
         first = last = positions[0]
         for n in positions[1:]:
-            if n - 1 == last: 
+            if n - 1 == last:
                 last = n
-            else: 
+            else:
                 if first == last:
                     short_positions.append(str(first))
                 else:
@@ -958,6 +998,9 @@ with open(outputfile, 'w', newline='\n') as out:
     # DCOSMO-RS:
     if args.dcosmors:
         out.write("{}\n".format(solvent_dcosmors.get(args.dcosmors)[1]))
+    # redirect output
+    out.write("$energy    file=energy \n")
+    out.write("$grad    file=gradient \n")
     ### terminate control file
     out.write("$end\n")
 
